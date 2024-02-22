@@ -21,7 +21,7 @@ public class RateLimiterInterceptor implements HandlerInterceptor {
         if (clientIPAddress == null)
             clientIPAddress = request.getRemoteAddr();
 
-        boolean rateLimited = rateLimiterService.isAllowed(clientIPAddress);
+        boolean rateLimited = rateLimiterService.isRateLimited(clientIPAddress);
 
         if (rateLimited) {
             response.setStatus(TOO_MANY_REQUESTS);

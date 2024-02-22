@@ -12,13 +12,13 @@ import java.util.concurrent.TimeUnit;
 @Service
 @EnableScheduling
 public class TokenBucketService {
-    private static final Long REFILL_RATE = Long.valueOf(3); //requests per minute
+    private static final String REFILL_RATE = "3"; //requests per minute
     static final String BUCKET_PREFIX = "token_bucket";
 
-    RedisTemplate<String, Long> redisTemplate;
+    RedisTemplate<String, String> redisTemplate;
 
     @Autowired
-    public TokenBucketService(RedisTemplate<String, Long> redisTemplate) {
+    public TokenBucketService(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
@@ -28,29 +28,29 @@ public class TokenBucketService {
 
     @Scheduled(timeUnit = TimeUnit.MINUTES, fixedRate = 1)
     private void scheduled_RefillBuckets() {
-        Set<String> bucketKeys = redisTemplate.keys(BUCKET_PREFIX);
+        Set<String> bucketKeys = redisTemplate.keys(BUCKET_PREFIX+"*");
         for (String bucketKey : bucketKeys) {
             refillBucket(bucketKey);
         }
     }
 
-    public boolean getToken(String ipAddress) {
+    public boolean isRateLimited(String ipAddress) {
         String bucketKey = BUCKET_PREFIX + ipAddress;
 
         if (redisTemplate.hasKey(bucketKey)) {
-            Long token = redisTemplate.opsForValue().get(bucketKey);
+            String token = redisTemplate.opsForValue().get(bucketKey);
 
-            if (token > 0) {
+            if (Integer.parseInt(token) > 0) {
                 redisTemplate.opsForValue().decrement(bucketKey);
-                return true;
+                return false;
             }
         } else {
             refillBucket(bucketKey);
             redisTemplate.opsForValue().decrement(bucketKey);
-            return true;
+            return false;
         }
 
-        return false;
+        return true;
     }
 
 }

@@ -7,17 +7,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class RateLimiterService {
 
-    RedisTemplate<String, Long> redisTemplate;
+    RedisTemplate<String, String> redisTemplate;
     TokenBucketService tokenBucketService;
 
     @Autowired
-    public RateLimiterService(RedisTemplate<String, Long> redisTemplate, TokenBucketService tokenBucketService) {
+    public RateLimiterService(RedisTemplate<String, String> redisTemplate, TokenBucketService tokenBucketService) {
         this.redisTemplate = redisTemplate;
         this.tokenBucketService = tokenBucketService;
     }
 
-    public boolean isAllowed(String clientIPAddress) {
-        return tokenBucketService.getToken(clientIPAddress);
+    public boolean isRateLimited(String clientIPAddress) {
+        return tokenBucketService.isRateLimited(clientIPAddress);
     }
 
 }
