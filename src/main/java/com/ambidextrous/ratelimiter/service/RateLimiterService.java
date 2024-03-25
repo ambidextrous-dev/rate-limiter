@@ -1,5 +1,7 @@
 package com.ambidextrous.ratelimiter.service;
 
+import com.ambidextrous.ratelimiter.common.RateLimiterResponse;
+
 public interface RateLimiterService {
-    boolean isRateLimited(String key);
+    RateLimiterResponse isRateLimited(String key);
 }

@@ -1,6 +1,8 @@
 package com.ambidextrous.ratelimiter.service;
 
+import com.ambidextrous.ratelimiter.common.RateLimiterResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,19 +16,27 @@ import java.util.concurrent.TimeUnit;
 @EnableScheduling
 @ConditionalOnProperty(value = "rate.limiter.algorithm", havingValue = "leakybucket")
 public class LeakyBucketServiceImpl implements RateLimiterService {
-    private final int QUEUE_SIZE = 10;
-    private final int LEAK_RATE = 10; //API limit of 10 per hour
-    private final String BUCKET_PREFIX = "token_bucket";
+    private final int queueSize;
+    private final String bucketPrefix;
     private Queue<String> requestQueue;
+    private final int LEAK_RATE = 10; //API limit of 10 per hour
 
     @Autowired
-    public LeakyBucketServiceImpl() {
-        this.requestQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
+    public LeakyBucketServiceImpl(@Value("${leakybucket.queue.size}") int queueSize,
+                                  @Value("${leakybucket.prefix}") String bucketPrefix) {
+        this.queueSize = queueSize;
+        this.bucketPrefix = bucketPrefix;
+        this.requestQueue = new LinkedBlockingQueue<>(queueSize);
     }
 
     @Override
-    public boolean isRateLimited(String key) {
-        return !requestQueue.offer(BUCKET_PREFIX + key);
+    public RateLimiterResponse isRateLimited(String key) {
+        boolean isRateLimited = !requestQueue.offer(bucketPrefix + key);
+
+        if (isRateLimited)
+            return new RateLimiterResponse(true, "Too many requests, please try in a while");
+        else
+            return new RateLimiterResponse(false, "OK");
     }
 
     //Runs every few minutes based on the leak rate per hour

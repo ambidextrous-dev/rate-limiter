@@ -2,17 +2,19 @@ package com.ambidextrous.ratelimiter.service;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 public class BitcoinService {
     RestTemplate restTemplate;
-    private final String bitcoinApiUrl = "https://api.coindesk.com/v1/bpi/currentprice.json";
+    private final String bitcoinApiUrl;
 
     @Autowired
-    public BitcoinService(RestTemplate restTemplate) {
+    public BitcoinService(RestTemplate restTemplate, @Value("${bitcoin.api.url}") String bitcoinApiUrl) {
         this.restTemplate = restTemplate;
+        this.bitcoinApiUrl = bitcoinApiUrl;
     }
 
     public String getCurrentPrice() {
